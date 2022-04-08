@@ -23,9 +23,9 @@ const getResponse = async (query) => {
             stop: [". "]
         });
     } catch (e) {
-        console.log(e);
+        // console.log(e);
     }
-    console.log(response.data);
+    // console.log(response.data);
     return response;
 };
 
