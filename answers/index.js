@@ -20,7 +20,7 @@ const getResponse = async (query) => {
             ],
             max_tokens: 32,
             return_metadata: true,
-            stop: [". "]
+            stop: [". ", "==="]
         });
     } catch (e) {
         // console.log(e);

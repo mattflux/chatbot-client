@@ -1,4 +1,13 @@
-import { Button, LinearProgress, TextField } from "@mui/material";
+import {
+    Button,
+    LinearProgress,
+    TextField,
+    FormGroup,
+    Card,
+    CardContent,
+    CardHeader,
+    Typography,
+} from "@mui/material";
 import type { NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
@@ -48,6 +57,42 @@ const YoutubeEmbed = ({ embedId, offset }: any) => (
     </div>
 );
 
+const ArticleCard = ({
+    link,
+    header,
+    text,
+}: {
+    link: string;
+    header: string;
+    text: string;
+}) => {
+    return (
+        <a href={link}>
+            <Card className="card">
+                <CardContent>
+                    <Typography
+                        sx={{ fontSize: 14 }}
+                        color="text.secondary"
+                        gutterBottom
+                    >
+                        {header}
+                    </Typography>
+                    <Typography
+                        variant="body2"
+                        style={{
+                            maxHeight: "200px",
+                            textOverflow: "ellipsis",
+                            overflow: "hidden",
+                        }}
+                    >
+                        {text}
+                    </Typography>
+                </CardContent>
+            </Card>
+        </a>
+    );
+};
+
 const Home: NextPage = () => {
     const [results, setResults] = useState<any>(null);
     const [query, setQuery] = useState("");
@@ -68,41 +113,48 @@ const Home: NextPage = () => {
             return <LinearProgress />;
         }
         if (results?.answers?.length) {
+            const shortList = results.documents
+                .sort((a: IDocument, b: IDocument) => b.score - a.score)
+                .slice(0, 3);
             return (
                 <div>
-                    <p>{results.answers[0]}</p>
-                    <ul>
-                        {results.documents
-                            .sort(
-                                (a: IDocument, b: IDocument) =>
-                                    b.score - a.score
-                            )
-                            .slice(0, 3)
-                            .map((doc: IDocument) => {
-                                if ("article_id" in doc.metadata) {
-                                    return (
-                                        <li>
-                                            <a
-                                                href={`${doc.metadata.article_id}#${doc.metadata.header}`}
-                                            >
-                                                {doc.metadata.header}
-                                            </a>
-                                        </li>
-                                    );
-                                } else {
-                                    return (
-                                        <li>
+                    <h2>Answer</h2>
+                    <p style={{ fontWeight: "bold" }}>{results.answers[0]}</p>
+                    <div style={{ display: "flex" }}>
+                        <div style={{ flexBasis: "50%", marginRight: "1rem" }}>
+                            <h4>Relevant articles</h4>
+                            <ul>
+                                {shortList.map((doc: IDocument) => {
+                                    if ("article_id" in doc.metadata) {
+                                        return (
+                                            <ArticleCard
+                                                link={`${doc.metadata.article_id}#${doc.metadata.header}`}
+                                                header={doc.metadata.header}
+                                                text={doc.text}
+                                            />
+                                        );
+                                    }
+                                })}
+                            </ul>
+                        </div>
+                        <div style={{ flexBasis: "50%" }}>
+                            <h4>Relevant videos</h4>
+                            <ul>
+                                {shortList.map((doc: IDocument) => {
+                                    if ("video_id" in doc.metadata) {
+                                        return (
                                             <YoutubeEmbed
                                                 embedId={doc.metadata.video_id}
                                                 offset={Math.round(
                                                     doc.metadata.start
                                                 )}
                                             />
-                                        </li>
-                                    );
-                                }
-                            })}
-                    </ul>
+                                        );
+                                    }
+                                })}
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             );
         }
@@ -116,19 +168,27 @@ const Home: NextPage = () => {
                 <meta name="description" content="It's Jharwin but it's AI" />
                 <link rel="icon" href="/favicon.ico" />
             </Head>
-            <TextField
-                required
-                id="outlined"
-                label="What can I help you with?"
-                defaultValue="How do I connect two elements?"
-                value={query}
-                fullWidth
-                onChange={(e) => setQuery(e.target.value)}
-            />
-            <Button variant="contained" onClick={runQuery}>
-                Search
-            </Button>
-            {getContent(results)}
+            <div style={{ width: "80%", margin: "0px auto" }}>
+                <FormGroup row>
+                    <TextField
+                        required
+                        id="outlined"
+                        label="What can I help you with?"
+                        defaultValue="How do I connect two elements?"
+                        value={query}
+                        style={{ flexGrow: 1, background: "#1D1E1E" }}
+                        onChange={(e) => setQuery(e.target.value)}
+                    />
+                    <Button
+                        variant="contained"
+                        onClick={runQuery}
+                        style={{ marginLeft: "1rem" }}
+                    >
+                        Search
+                    </Button>
+                </FormGroup>
+                {getContent(results)}
+            </div>
         </div>
     );
 };
